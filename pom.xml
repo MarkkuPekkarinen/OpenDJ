@@ -18,7 +18,7 @@
     <modelVersion>4.0.0</modelVersion>
 	<groupId>org.openidentityplatform.opendj</groupId>
     <artifactId>opendj-parent</artifactId>
-	<version>4.5.7-SNAPSHOT</version>
+	<version>4.5.10-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>OpenDJ Directory Services Project</name>
@@ -322,12 +322,12 @@
 			<plugin>
 		      <groupId>org.sonatype.plugins</groupId>
 		      <artifactId>nexus-staging-maven-plugin</artifactId>
-		      <version>1.6.12</version>
+		      <version>1.6.13</version>
 		      <extensions>true</extensions>
 		      <configuration>
 		        <serverId>ossrh</serverId>
 		        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-		        <autoReleaseAfterClose>true</autoReleaseAfterClose>
+		        <autoReleaseAfterClose>false</autoReleaseAfterClose>
 		        <stagingProgressTimeoutMinutes>15</stagingProgressTimeoutMinutes>
 		        <keepStagingRepositoryOnFailure>true</keepStagingRepositoryOnFailure>
 		        <keepStagingRepositoryOnCloseRuleFailure>true</keepStagingRepositoryOnCloseRuleFailure>
@@ -400,7 +400,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>3.1.2</version>
                 </plugin>
                 
                 <plugin>
