@@ -20,7 +20,7 @@
     <parent>
         <artifactId>opendj-parent</artifactId>
         <groupId>org.openidentityplatform.opendj</groupId>
-        <version>4.5.10-SNAPSHOT</version>
+        <version>4.6.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>opendj-ldap-toolkit</artifactId>
@@ -132,7 +132,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M4</version>
+                <configuration>
+					<forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory" />
+		        </configuration>
             </plugin>
 
             <plugin>
