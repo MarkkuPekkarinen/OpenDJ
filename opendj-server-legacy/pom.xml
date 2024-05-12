@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.openidentityplatform.opendj</groupId>
     <artifactId>opendj-parent</artifactId>
-    <version>4.6.3-SNAPSHOT</version>
+    <version>4.6.4-SNAPSHOT</version>
   </parent>
   <artifactId>opendj-server-legacy</artifactId>
   <packaging>jar</packaging>
@@ -1235,7 +1235,7 @@
                     <org.opends.test.pauseOnFailure>false</org.opends.test.pauseOnFailure>
                     <org.opends.test.copyClassesToTestPackage>false</org.opends.test.copyClassesToTestPackage>
                   </systemPropertyVariables>
-                  <argLine> -Xmx1g @{argLine}</argLine>
+                  <argLine>@{argLine}</argLine>
 	          	  <reuseForks>false</reuseForks>
 	          	  <forkCount>1</forkCount>
 	          	  <parallel>none</parallel>
