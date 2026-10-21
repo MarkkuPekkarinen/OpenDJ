@@ -12,6 +12,7 @@
  * information: "Portions Copyright [year] [name of copyright owner]".
  *
  * Copyright 2014-2016 ForgeRock AS.
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 package org.opends.server.replication.server.changelog.file;
 
@@ -411,10 +412,12 @@ final class Log<K extends Comparable<K>, V> implements Closeable
    *
    * @param record
    *          The record to add.
+   * @return {@code true} if the record was appended, {@code false} if it was not: its key is not
+   *         higher than the key of the last record added, or this log is closed
    * @throws ChangelogException
    *           If an error occurs while adding the record to the log.
    */
-  public void append(final Record<K, V> record) throws ChangelogException
+  public boolean append(final Record<K, V> record) throws ChangelogException
   {
     // Fast-path - assume that no rotation is needed and use shared lock.
     sharedLock.lock();
@@ -422,13 +425,12 @@ final class Log<K extends Comparable<K>, V> implements Closeable
     {
       if (isClosed)
       {
-        return;
+        return false;
       }
       LogFile<K, V> headLogFile = getHeadLogFile();
       if (!mustRotate(headLogFile))
       {
-        headLogFile.append(record);
-        return;
+        return headLogFile.append(record);
       }
     }
     finally
@@ -442,13 +444,13 @@ final class Log<K extends Comparable<K>, V> implements Closeable
     {
       if (isClosed)
       {
-        return;
+        return false;
       }
       LogFile<K, V> headLogFile = getHeadLogFile();
       if (headLogFile.appendWouldBreakKeyOrdering(record))
       {
         // abort rotation
-        return;
+        return false;
       }
       if (mustRotate(headLogFile))
       {
@@ -457,7 +459,7 @@ final class Log<K extends Comparable<K>, V> implements Closeable
         rotateHeadLogFile();
         headLogFile = getHeadLogFile();
       }
-      headLogFile.append(record);
+      return headLogFile.append(record);
     }
     finally
     {
@@ -1046,7 +1048,8 @@ final class Log<K extends Comparable<K>, V> implements Closeable
         final K previousKey = logFiles.lowerKey(recordParser.getMaxKey());
         final LogFile<K, V> logFile = findLogFileFor(previousKey, KeyMatchingStrategy.EQUAL_TO_KEY);
         final AbortableLogCursor<K, V> cursor = pair.getFirst();
-        cursor.reinitializeTo(new CursorState<K, V>(logFile, cursorState.filePosition, cursorState.record));
+        cursor.reinitializeTo(new CursorState<K, V>(
+            logFile, cursorState.filePosition, cursorState.record, cursorState.initialRecord));
       }
     }
   }
@@ -1299,7 +1302,8 @@ final class Log<K extends Comparable<K>, V> implements Closeable
       log.sharedLock.lock();
       try
       {
-        return new CursorState<>(currentLogFile, currentCursor.getFilePosition(), currentCursor.getRecord());
+        return new CursorState<>(currentLogFile, currentCursor.getFilePosition(), currentCursor.getRecord(),
+            currentCursor.getInitialRecord());
       }
       finally
       {
@@ -1318,7 +1322,8 @@ final class Log<K extends Comparable<K>, V> implements Closeable
     void reinitializeTo(final CursorState<K, V> cursorState) throws ChangelogException
     {
       currentLogFile = cursorState.logFile;
-      currentCursor = currentLogFile.getCursorInitialisedTo(cursorState.record, cursorState.filePosition);
+      currentCursor = currentLogFile.getCursorInitialisedTo(
+          cursorState.record, cursorState.initialRecord, cursorState.filePosition);
     }
 
     @Override
@@ -1603,6 +1608,14 @@ final class Log<K extends Comparable<K>, V> implements Closeable
     /** The record the cursor is pointing to. */
     private final Record<K,V> record;
 
+    /**
+     * The record the cursor read in advance when it was positioned, and returns before it reads at
+     * {@link #filePosition}, which is past it. Without it, a cursor positioned on the head log file
+     * and moved to the rotated file before it read anything would skip the record it is positioned
+     * on - see issue #1227.
+     */
+    private final Record<K, V> initialRecord;
+
     private final boolean isValid;
 
     /** Creates a non-valid state. */
@@ -1610,15 +1623,18 @@ final class Log<K extends Comparable<K>, V> implements Closeable
       logFile = null;
       filePosition = 0;
       record = null;
+      initialRecord = null;
       isValid = false;
     }
 
     /** Creates a valid state. */
-    private CursorState(final LogFile<K, V> logFile, final long filePosition, final Record<K, V> record)
+    private CursorState(final LogFile<K, V> logFile, final long filePosition, final Record<K, V> record,
+        final Record<K, V> initialRecord)
     {
       this.logFile = logFile;
       this.filePosition = filePosition;
       this.record = record;
+      this.initialRecord = initialRecord;
       isValid = true;
     }
 

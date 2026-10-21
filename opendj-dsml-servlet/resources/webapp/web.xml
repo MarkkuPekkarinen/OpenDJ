@@ -88,6 +88,14 @@
      independently, so a DNS name whose records change between the two lookups
      (DNS rebinding) can still reach an internal address; only enable
      dereferencing for trusted clients.
+     Enabling this also sets the JVM-global "mapAnyUriToUri" system property,
+     which the JAXB reference implementation reads once, when it initialises:
+     every other application in the same JVM that initialises JAXB afterwards
+     then binds xsd:anyURI to java.net.URI instead of to java.lang.String
+     (GHSA-jr68-5c58-j463). In this gateway that binding also makes an anyURI
+     value which is not a valid java.net.URI - one holding a space, a pipe or a
+     brace - be rejected with an unresolvableURI error instead of being stored
+     verbatim.
   <context-param>
     <description>Enable server-side dereferencing of anyURI values (default false)</description>
     <param-name>ldap.dsml.dereference.anyuri</param-name>
@@ -102,6 +110,17 @@
     <description>Maximum number of bytes fetched from an anyURI value (default 10485760)</description>
     <param-name>ldap.dsml.dereference.anyuri.maxsize</param-name>
     <param-value>10485760</param-value>
+  </context-param>
+  If this network uses NAT64 with a Network-Specific Prefix (RFC 6052), declare
+  it here so that the IPv4 address embedded in a translated IPv6 address goes
+  through the same internal-address filter as the built-in transition prefixes
+  (an NSP is ordinary operator address space and cannot be detected
+  automatically). Comma-separated prefix/length entries; the length must be one
+  of 32, 40, 48, 56, 64 or 96.
+  <context-param>
+    <description>NAT64 Network-Specific Prefixes, e.g. 2001:db8:122:344::/96 (default none)</description>
+    <param-name>ldap.dsml.dereference.anyuri.nat64prefixes</param-name>
+    <param-value>2001:db8:122:344::/96</param-value>
   </context-param>
 -->
 
